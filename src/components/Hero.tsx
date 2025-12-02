@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 
 interface HeroProps {
   onStart: () => void;
@@ -12,9 +12,9 @@ export function Hero({ onStart }: HeroProps) {
       <div className="max-w-4xl w-full text-center space-y-12">
         {/* Main Title with Fade-in Animation */}
         <motion.div
-          initial={{ opacity: 0, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, filter: 'blur(0px)' }}
-          transition={{ duration: 1.5, ease: 'easeOut' }}
+          initial={{ opacity: 0, filter: "blur(10px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
           className="space-y-4"
         >
           <motion.h1
@@ -23,7 +23,7 @@ export function Hero({ onStart }: HeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
-            書き初め
+            アジャイル書き初め
           </motion.h1>
 
           <motion.div
@@ -42,7 +42,8 @@ export function Hero({ onStart }: HeroProps) {
           className="space-y-6"
         >
           <h2 className="text-2xl md:text-4xl font-yuji text-sumi tracking-wide">
-            AIとアジャイルに、新年の決意を。
+            <span className="text-shuniku">AI</span>
+            とアジャイルに、新年の決意を。
           </h2>
 
           <p className="text-lg md:text-xl text-sumi/70 font-zen">
@@ -79,9 +80,7 @@ export function Hero({ onStart }: HeroProps) {
           transition={{ duration: 1, delay: 2.5 }}
           className="pt-12"
         >
-          <p className="text-sm text-sumi/40 font-zen">
-            RSGT2026 LT Demo
-          </p>
+          <p className="text-sm text-sumi/40 font-zen">RSGT2026 LT Demo</p>
         </motion.div>
       </div>
     </div>

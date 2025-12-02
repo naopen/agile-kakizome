@@ -88,13 +88,17 @@ npm run build
 npm run deploy
 ```
 
-3. **Set environment variables in Cloudflare Pages dashboard:**
+3. **⚠️ IMPORTANT: Set environment variables in Cloudflare Pages dashboard:**
 
 - Navigate to your project in Cloudflare Pages dashboard
 - Go to Settings → Environment variables
-- Add:
-  - `GEMINI_API_KEY`: Your Google Gemini API key
-  - `ACCESS_PASSWORD`: Your access password
+- Add these variables for **Production** environment:
+  - `GEMINI_API_KEY`: Your Google Gemini API key (get from https://aistudio.google.com/apikey)
+  - `ACCESS_PASSWORD`: Your access password for the demo
+
+4. **Redeploy after setting variables** to apply changes
+
+**For detailed deployment instructions and troubleshooting, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
 
 ## Project Structure
 

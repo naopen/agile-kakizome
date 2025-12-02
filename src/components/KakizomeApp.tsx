@@ -26,6 +26,11 @@ interface ApiResponse {
   error?: string;
 }
 
+interface AuthResponse {
+  success: boolean;
+  error?: string;
+}
+
 export function KakizomeApp({ isOpen, onClose, onSuccess }: KakizomeAppProps) {
   const [step, setStep] = useState<'auth' | 'form'>('auth');
   const [password, setPassword] = useState('');
@@ -34,7 +39,7 @@ export function KakizomeApp({ isOpen, onClose, onSuccess }: KakizomeAppProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) {
       toast({
@@ -44,7 +49,42 @@ export function KakizomeApp({ isOpen, onClose, onSuccess }: KakizomeAppProps) {
       });
       return;
     }
-    setStep('form');
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json() as AuthResponse;
+
+      if (!response.ok || !data.success) {
+        toast({
+          title: '認証エラー',
+          description: 'パスワードが正しくありません',
+          variant: 'destructive',
+        });
+        setPassword('');
+        return;
+      }
+
+      // Authentication successful
+      setStep('form');
+    } catch (error) {
+      console.error('Auth error:', error);
+      toast({
+        title: 'エラー',
+        description: '認証に失敗しました。もう一度お試しください。',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,17 +101,24 @@ export function KakizomeApp({ isOpen, onClose, onSuccess }: KakizomeAppProps) {
 
     setIsLoading(true);
 
+    // Debug log
+    console.log('Submitting with password length:', password?.length || 0);
+    console.log('Password exists:', !!password);
+
     try {
+      const payload = {
+        review,
+        goal,
+        password,
+      };
+      console.log('Payload:', { ...payload, password: password ? '***' : 'EMPTY' });
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          review,
-          goal,
-          password,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json() as ApiResponse;
@@ -147,11 +194,19 @@ export function KakizomeApp({ isOpen, onClose, onSuccess }: KakizomeAppProps) {
                   placeholder="パスワードを入力"
                   className="font-zen"
                   autoFocus
+                  disabled={isLoading}
                 />
               </div>
 
-              <Button type="submit" className="w-full font-zen">
-                次へ
+              <Button type="submit" className="w-full font-zen" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    認証中...
+                  </>
+                ) : (
+                  '次へ'
+                )}
               </Button>
             </form>
           </>

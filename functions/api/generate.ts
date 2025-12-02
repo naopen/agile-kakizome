@@ -22,8 +22,34 @@ interface GeminiResponse {
         text?: string;
       }>;
     };
+    finishReason?: string;
   }>;
+  error?: {
+    message?: string;
+    code?: number;
+  };
+  modelVersion?: string;
 }
+
+// JSON Schema for structured output
+const responseSchema = {
+  type: "object",
+  properties: {
+    kanji: {
+      type: "string",
+      description: "選定した漢字1文字"
+    },
+    meaning_jp: {
+      type: "string",
+      description: "その漢字を選んだ理由と、ユーザーへの励ましのメッセージ（日本語、2-3文）"
+    },
+    meaning_en: {
+      type: "string",
+      description: "The reason for choosing this kanji and an encouraging message (English, 2-3 sentences)"
+    }
+  },
+  required: ["kanji", "meaning_jp", "meaning_en"]
+};
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const corsHeaders = {
@@ -39,12 +65,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
+    // Check if environment variables are set
+    if (!context.env.ACCESS_PASSWORD || !context.env.GEMINI_API_KEY) {
+      console.error('Environment variables not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     // Parse request body
     const body: RequestBody = await context.request.json();
     const { review, goal, password } = body;
 
     // Validate password
-    if (password !== context.env.ACCESS_PASSWORD) {
+    if (!password || password !== context.env.ACCESS_PASSWORD) {
+      console.error('Password validation failed');
       return new Response(
         JSON.stringify({ error: 'Invalid password' }),
         { status: 401, headers: corsHeaders }
@@ -61,54 +97,60 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Call Gemini API
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${context.env.GEMINI_API_KEY}`,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
         method: 'POST',
         headers: {
+          'x-goog-api-key': context.env.GEMINI_API_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          system_instruction: {
+            parts: [
+              {
+                text: 'あなたは書道の達人です。ユーザーの2025年の振り返りと2026年の目標を深く解釈し、2026年の指針となる「漢字1文字」を選定してください。'
+              }
+            ]
+          },
           contents: [
             {
               parts: [
                 {
-                  text: `あなたは書道の達人です。ユーザーの2025年の振り返りと2026年の目標を深く解釈し、2026年の指針となる「漢字1文字」を選定してください。
-
-【2025年の振り返り】
+                  text: `【2025年の振り返り】
 ${review}
 
 【2026年の目標】
 ${goal}
 
-上記を踏まえ、ユーザーにとって最適な漢字1文字を選定し、以下のJSON形式で出力してください：
-
-{
-  "kanji": "選定した漢字1文字",
-  "meaning_jp": "その漢字を選んだ理由と、ユーザーへの励ましのメッセージ（日本語、2-3文）",
-  "meaning_en": "The reason for choosing this kanji and an encouraging message for the user (English, 2-3 sentences)"
-}
-
-必ずJSON形式で出力してください。`,
-                },
-              ],
-            },
+上記を踏まえ、ユーザーにとって最適な漢字1文字を選定してください。`
+                }
+              ]
+            }
           ],
           generationConfig: {
-            temperature: 0.8,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-            responseMimeType: 'application/json',
+            temperature: 1.0,
+            top_k: 40,
+            top_p: 0.95,
+            max_output_tokens: 8192,
+            response_mime_type: 'application/json',
+            response_schema: responseSchema
           },
         }),
       }
     );
 
     if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error('Gemini API error:', errorText);
+      const errorData = await geminiResponse.json().catch(() => null) as GeminiResponse | null;
+      console.error('Gemini API error:', {
+        status: geminiResponse.status,
+        statusText: geminiResponse.statusText,
+        error: errorData
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to generate kanji' }),
+        JSON.stringify({
+          error: 'Failed to generate kanji',
+          details: errorData?.error?.message || 'Unknown error'
+        }),
         { status: 500, headers: corsHeaders }
       );
     }
@@ -119,17 +161,36 @@ ${goal}
     const generatedText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!generatedText) {
+      console.error('No response from Gemini API:', JSON.stringify(geminiData, null, 2));
       return new Response(
-        JSON.stringify({ error: 'No response from AI' }),
+        JSON.stringify({
+          error: 'No response from AI',
+          finishReason: geminiData.candidates?.[0]?.finishReason,
+          modelVersion: geminiData.modelVersion
+        }),
         { status: 500, headers: corsHeaders }
       );
     }
 
     // Parse the JSON response
-    const kanjiResult: KanjiResponse = JSON.parse(generatedText);
+    let kanjiResult: KanjiResponse;
+    try {
+      kanjiResult = JSON.parse(generatedText);
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', generatedText, parseError);
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid JSON response from AI',
+          rawText: generatedText,
+          parseError: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
 
     // Validate the result
     if (!kanjiResult.kanji || !kanjiResult.meaning_jp || !kanjiResult.meaning_en) {
+      console.error('Invalid response format:', kanjiResult);
       return new Response(
         JSON.stringify({ error: 'Invalid response format from AI' }),
         { status: 500, headers: corsHeaders }

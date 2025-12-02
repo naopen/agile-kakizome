@@ -33,28 +33,8 @@ export function ResultView({ kanji, meaningJp, meaningEn, onReset }: ResultViewP
               >
                 {kanji}
               </motion.div>
-
-              {/* Hanko (Seal) */}
-              <motion.div
-                className="hanko ml-8 mt-auto"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 1.5, type: 'spring' }}
-              >
-                敏捷
-              </motion.div>
             </div>
           </div>
-
-          {/* Year Label */}
-          <motion.div
-            className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-shuniku text-washi px-6 py-2 rounded-full shadow-md"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 2 }}
-          >
-            <span className="font-yuji text-lg">2026</span>
-          </motion.div>
         </motion.div>
 
         {/* Meanings */}

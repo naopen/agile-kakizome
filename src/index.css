@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Digital Wabi-Sabi Color Palette */
+    --washi: 28 10 3; /* #fcfaf2 in HSL */
+    --sumi: 0 0 11%; /* #1c1c1c */
+    --shuniku: 5 68% 53%; /* #da4a38 */
+
+    /* shadcn/ui variables mapped to our theme */
+    --background: 28 10 97%; /* washi */
+    --foreground: 0 0 11%; /* sumi */
+
+    --card: 28 10 97%;
+    --card-foreground: 0 0 11%;
+
+    --popover: 28 10 97%;
+    --popover-foreground: 0 0 11%;
+
+    --primary: 0 0 11%; /* sumi */
+    --primary-foreground: 28 10 97%; /* washi */
+
+    --secondary: 5 68% 53%; /* shuniku */
+    --secondary-foreground: 28 10 97%;
+
+    --muted: 28 10 90%;
+    --muted-foreground: 0 0 30%;
+
+    --accent: 5 68% 53%;
+    --accent-foreground: 28 10 97%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0 98%;
+
+    --border: 0 0 11% / 0.1;
+    --input: 0 0 11% / 0.2;
+    --ring: 0 0 11%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-washi text-sumi font-zen;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom washi texture effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    z-index: -1;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(28, 28, 28, 0.03) 2px,
+        rgba(28, 28, 28, 0.03) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(28, 28, 28, 0.03) 2px,
+        rgba(28, 28, 28, 0.03) 4px
+      );
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  /* Vertical writing mode for kanji display */
+  .writing-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+  }
+
+  /* Hanko (seal) effect */
+  .hanko {
+    display: inline-block;
+    width: 3rem;
+    height: 3rem;
+    background-color: theme('colors.shuniku.DEFAULT');
+    color: theme('colors.washi.DEFAULT');
+    font-family: theme('fontFamily.yuji');
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid theme('colors.shuniku.DEFAULT');
+    box-shadow: 0 2px 8px rgba(218, 74, 56, 0.2);
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+  }
+}

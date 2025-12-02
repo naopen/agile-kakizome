@@ -1,0 +1,12 @@
+name = "agile-kakizome"
+compatibility_date = "2025-01-15"
+pages_build_output_dir = "dist"
+
+[vars]
+# Environment variables for local development
+# Set GEMINI_API_KEY in Cloudflare Pages dashboard for production
+# Set ACCESS_PASSWORD in Cloudflare Pages dashboard for production
+
+# For local development, create a .dev.vars file with:
+# GEMINI_API_KEY=your_api_key_here
+# ACCESS_PASSWORD=your_password_here
